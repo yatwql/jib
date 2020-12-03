@@ -147,13 +147,19 @@ public class StepsRunner {
   public StepsRunner dockerLoadSteps(DockerClient dockerClient) {
     rootProgressDescription = "building image to Docker daemon";
 
+    stepsToRun.add(
+        progressDispatcherFactory -> {
+          try (ProgressEventDispatcher progressDispatcher =
+              progressDispatcherFactory.create("scheduling obtaining base images layers", 10)) {}
+        });
+
     addRetrievalSteps(true); // always pull layers for docker builds
-    stepsToRun.add(this::buildAndCacheApplicationLayers);
-    stepsToRun.add(this::buildImages);
+    // stepsToRun.add(this::buildAndCacheApplicationLayers);
+    // stepsToRun.add(this::buildImages);
 
     // load to Docker
-    stepsToRun.add(
-        progressDispatcherFactory -> loadDocker(dockerClient, progressDispatcherFactory));
+    // stepsToRun.add(
+    //    progressDispatcherFactory -> loadDocker(dockerClient, progressDispatcherFactory));
     return this;
   }
 
@@ -224,6 +230,7 @@ public class StepsRunner {
                       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
                   DescriptorDigest.fromHash(
                       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")));
+      results.baseImagesAndRegistryClient.get();
       return results.buildResult.get();
 
     } catch (ExecutionException ex) {
@@ -255,9 +262,9 @@ public class StepsRunner {
     } else {
       // Otherwise default to RegistryImage
       stepsToRun.add(this::pullBaseImages);
-      stepsToRun.add(
-          progressDispatcherFactory ->
-              obtainBaseImagesLayers(layersRequiredLocally, progressDispatcherFactory));
+      // stepsToRun.add(
+      //    progressDispatcherFactory ->
+      //        obtainBaseImagesLayers(layersRequiredLocally, progressDispatcherFactory));
     }
   }
 
