@@ -60,9 +60,9 @@ class LoadDockerStep implements Callable<BuildResult> {
               buildContext.getTargetImageConfiguration().getImage(),
               buildContext.getAllTargetImageTags());
 
-      // Note: The progress reported here is not entirely accurate. The total allocation units is
-      // the size of the layers, but the progress being reported includes the config and manifest
-      // as well, so we will always go over the total progress allocation here.
+      // Note: The progress reported here is not entirely accurate. The total allocation units are
+      // the byte size of all the layers, but the progress being reported includes the config and
+      // manifest as well, so we will always go over the total progress allocation here.
       // See https://github.com/GoogleContainerTools/jib/pull/1960#discussion_r321898390
       try (ProgressEventDispatcher progressEventDispatcher =
               progressEventDispatcherFactory.create(

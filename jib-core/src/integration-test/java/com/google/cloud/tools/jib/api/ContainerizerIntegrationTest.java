@@ -65,12 +65,19 @@ public class ContainerizerIntegrationTest {
             update -> {
               lastProgress = update.getProgress();
               areTasksFinished = update.getUnfinishedLeafTasks().isEmpty();
+              unfinished = update.getUnfinishedLeafTasks();
             });
 
     private volatile double lastProgress = 0.0;
     private volatile boolean areTasksFinished = false;
+    private volatile List<String> unfinished = Collections.emptyList();
 
     private void checkCompletion() {
+      if (!areTasksFinished) {
+        System.out.println("==== BEGIN ====");
+        unfinished.forEach(System.out::println);
+        System.out.println("==== END ====");
+      }
       Assert.assertEquals(1.0, lastProgress, DOUBLE_ERROR_MARGIN);
       Assert.assertTrue(areTasksFinished);
     }

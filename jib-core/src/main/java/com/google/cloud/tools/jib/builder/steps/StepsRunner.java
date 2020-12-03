@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
+import java.security.DigestException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -216,6 +217,13 @@ public class StepsRunner {
         ProgressEventDispatcher.newRoot(
             buildContext.getEventHandlers(), rootProgressDescription, stepsToRun.size())) {
       stepsToRun.forEach(step -> step.accept(progressEventDispatcher.newChildProducer()));
+      results.buildResult =
+          Futures.immediateFuture(
+              new BuildResult(
+                  DescriptorDigest.fromHash(
+                      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+                  DescriptorDigest.fromHash(
+                      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")));
       return results.buildResult.get();
 
     } catch (ExecutionException ex) {
@@ -224,6 +232,9 @@ public class StepsRunner {
         unrolled = (ExecutionException) unrolled.getCause();
       }
       throw unrolled;
+
+    } catch (DigestException e) {
+      throw new IllegalArgumentException("STOP");
 
     } finally {
       tempDirectoryProvider.close();
