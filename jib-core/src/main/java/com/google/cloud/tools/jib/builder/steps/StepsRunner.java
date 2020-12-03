@@ -154,11 +154,12 @@ public class StepsRunner {
   public StepsRunner dockerLoadSteps(DockerClient dockerClient) {
     rootProgressDescription = "building image to Docker daemon";
 
-    stepsToRun.add(
-        progressDispatcherFactory -> {
-          try (ProgressEventDispatcher progressDispatcher =
-              progressDispatcherFactory.create("scheduling obtaining base images layers", 10)) {}
-        });
+    //    stepsToRun.add(
+    //        progressDispatcherFactory -> {
+    //          try (ProgressEventDispatcher progressDispatcher =
+    //              progressDispatcherFactory.create("scheduling obtaining base images layers", 10))
+    // {}
+    //        });
 
     addRetrievalSteps(true); // always pull layers for docker builds
     // stepsToRun.add(this::buildAndCacheApplicationLayers);
