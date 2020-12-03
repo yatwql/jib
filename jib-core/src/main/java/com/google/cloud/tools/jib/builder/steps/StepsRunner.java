@@ -17,10 +17,12 @@
 package com.google.cloud.tools.jib.builder.steps;
 
 import com.google.cloud.tools.jib.api.DescriptorDigest;
+import com.google.cloud.tools.jib.api.RegistryException;
 import com.google.cloud.tools.jib.blob.BlobDescriptor;
 import com.google.cloud.tools.jib.builder.ProgressEventDispatcher;
 import com.google.cloud.tools.jib.builder.steps.LocalBaseImageSteps.LocalImage;
 import com.google.cloud.tools.jib.builder.steps.PullBaseImageStep.ImagesAndRegistryClient;
+import com.google.cloud.tools.jib.cache.CacheCorruptedException;
 import com.google.cloud.tools.jib.configuration.BuildContext;
 import com.google.cloud.tools.jib.configuration.ImageConfiguration;
 import com.google.cloud.tools.jib.docker.DockerClient;
@@ -28,9 +30,13 @@ import com.google.cloud.tools.jib.filesystem.TempDirectoryProvider;
 import com.google.cloud.tools.jib.global.JibSystemProperties;
 import com.google.cloud.tools.jib.image.Image;
 import com.google.cloud.tools.jib.image.Layer;
+import com.google.cloud.tools.jib.image.LayerCountMismatchException;
+import com.google.cloud.tools.jib.image.LayerPropertyNotFoundException;
+import com.google.cloud.tools.jib.image.json.BadContainerConfigurationFormatException;
 import com.google.cloud.tools.jib.image.json.ManifestTemplate;
 import com.google.cloud.tools.jib.registry.ManifestAndDigest;
 import com.google.cloud.tools.jib.registry.RegistryClient;
+import com.google.cloud.tools.jib.registry.credentials.CredentialRetrievalException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
@@ -38,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.security.DigestException;
 import java.util.ArrayList;
@@ -316,8 +323,22 @@ public class StepsRunner {
 
   @VisibleForTesting
   void pullBaseImages(ProgressEventDispatcher.Factory progressDispatcherFactory) {
-    results.baseImagesAndRegistryClient =
-        executorService.submit(new PullBaseImageStep(buildContext, progressDispatcherFactory));
+    try {
+      results.baseImagesAndRegistryClient =
+          Futures.immediateFuture(
+              new PullBaseImageStep(buildContext, progressDispatcherFactory).call());
+    } catch (LayerPropertyNotFoundException
+        | IOException
+        | RegistryException
+        | LayerCountMismatchException
+        | BadContainerConfigurationFormatException
+        | CacheCorruptedException
+        | CredentialRetrievalException e) {
+      // TODO Auto-generated catch block
+      throw new IllegalArgumentException("STOP");
+    }
+    // results.baseImagesAndRegistryClient =
+    // executorService.submit(new PullBaseImageStep(buildContext, progressDispatcherFactory));
   }
 
   private void obtainBaseImagesLayers(
